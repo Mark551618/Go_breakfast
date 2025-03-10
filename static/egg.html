@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蛋餅類別</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <h1>蛋餅類別</h1>
+
+    <div id="menu">
+        <div class="menu-item">
+            <span>熱狗蛋餅 - 40元</span>
+            <button onclick="changeQuantity(4, 1)">+</button>
+            <span id="qty-4">0</span>
+            <button onclick="changeQuantity(4, -1)">-</button>
+        </div>
+        <div class="menu-item">
+            <span>原味蛋餅 - 30元</span>
+            <button onclick="changeQuantity(5, 1)">+</button>
+            <span id="qty-5">0</span>
+            <button onclick="changeQuantity(5, -1)">-</button>
+        </div>
+        <div class="menu-item">
+            <span>培根蛋餅 - 45元</span>
+            <button onclick="changeQuantity(6, 1)">+</button>
+            <span id="qty-6">0</span>
+            <button onclick="changeQuantity(6, -1)">-</button>
+        </div>
+    </div>
+    
+    <a href="/static/cart.html"><button>前往購物車</button></a>
+    <button onclick="confirmOrder()">確認訂單</button>
+    
+
+    <script src="/static/script.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            loadCartItems();
+        });
+    </script>
+
+</body>
+</html>
