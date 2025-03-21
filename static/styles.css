@@ -1,0 +1,89 @@
+/* 🔹 整體樣式 */
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #f8f8f8;
+    padding: 20px;
+}
+
+/* 🔹 商品分類按鈕 */
+.category-buttons button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    margin: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.category-buttons button:hover {
+    background-color: #0056b3;
+}
+
+/* 🔹 商品區域 */
+.category {
+    margin-top: 20px;
+}
+
+/* 🔹 單個商品排版 */
+.item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: white;
+    padding: 10px;
+    margin: 5px auto;
+    width: 50%;
+    border-radius: 8px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 🔹 商品名稱 */
+.item span {
+    flex: 1;
+    font-size: 18px;
+}
+
+/* 🔹 `+` `-` 按鈕 */
+button.plus, button.minus {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button.minus {
+    background-color: #dc3545;
+}
+
+button.plus:hover {
+    background-color: #218838;
+}
+
+button.minus:hover {
+    background-color: #c82333;
+}
+
+/* 🔹 購物車區域 */
+#cart {
+    margin-top: 20px;
+    padding: 10px;
+    background: white;
+    border-radius: 8px;
+    width: 60%;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#total {
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 10px;
+}

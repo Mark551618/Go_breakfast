@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>早餐店點餐系統</title>
+  <link rel="stylesheet" href="/static/styles.css">  <!-- 加入 CSS 檔案 -->
+  
+</head>
+<body>
+  <h1>早餐店點餐系統</h1>
+
+  <!-- 🔹 桌號選擇 -->
+  <label for="tableSelect">選擇桌號：</label>
+  <select id="tableSelect">
+    <option value="A">A桌</option>
+    <option value="B">B桌</option>
+    <option value="C">C桌</option>
+    <option value="D">D桌</option>
+    <option value="E">E桌</option>
+    <option value="F">F桌</option>
+  </select>
+
+  <h2>商品分類</h2>
+    <button onclick="showCategory('burger')">漢堡</button>
+    <button onclick="showCategory('pancake')">蛋餅</button>
+    <button onclick="showCategory('drink')">飲料</button>
+
+  <!-- 🔹 商品類別，預設不顯示 -->
+  <div id="burger" class="category" style="display: none;">
+    <div class="item">
+      <span>豬排蛋漢堡</span>
+      <button onclick="updateQuantity(1, -1)">-</button>
+      <span id="qty-1">0</span>
+      <button onclick="updateQuantity(1, 1)">+</button>
+    </div>
+
+    <div class="item">
+      <span>雞排蛋漢堡</span>
+      <button onclick="updateQuantity(2, -1)">-</button>
+      <span id="qty-2">0</span>
+      <button onclick="updateQuantity(2, 1)">+</button>
+    </div>
+
+    <div class="item">
+      <span>酥炸魚排漢堡</span>
+      <button onclick="updateQuantity(3, -1)">-</button>
+      <span id="qty-3">0</span>
+      <button onclick="updateQuantity(3, 1)">+</button>
+    </div>
+  </div>
+
+  <div id="pancake" class="category" style="display: none;">
+    <div class="item">
+      <span>起司蛋餅</span>
+      <button onclick="updateQuantity(4, -1)">-</button>
+      <span id="qty-4">0</span>
+      <button onclick="updateQuantity(4, 1)">+</button>
+    </div>
+  
+    <div class="item">
+      <span>九層塔蛋餅</span>
+      <button onclick="updateQuantity(5, -1)">-</button>
+      <span id="qty-5">0</span>
+      <button onclick="updateQuantity(5, 1)">+</button>
+    </div>
+  
+    <div class="item">
+      <span>培根蛋餅</span>
+      <button onclick="updateQuantity(6, -1)">-</button>
+      <span id="qty-6">0</span>
+      <button onclick="updateQuantity(6, 1)">+</button>
+    </div>
+  </div>
+
+  <div id="drink" class="category" style="display: none;">
+    <div class="item">
+      <span>阿薩姆紅茶</span>
+      <button onclick="updateQuantity(7, -1)">-</button>
+      <span id="qty-7">0</span>
+      <button onclick="updateQuantity(7, 1)">+</button>
+    </div>
+  
+    <div class="item">
+      <span>茉香綠茶</span>
+      <button onclick="updateQuantity(8, -1)">-</button>
+      <span id="qty-8">0</span>
+      <button onclick="updateQuantity(8, 1)">+</button>
+    </div>
+
+    <div class="item">
+      <span>高山青茶</span>
+      <button onclick="updateQuantity(9, -1)">-</button>
+      <span id="qty-9">0</span>
+      <button onclick="updateQuantity(9, 1)">+</button>
+    </div>
+  </div>
+
+
+
+
+  <h2>購物車內容</h2>
+  <button onclick="loadCart()">查看購物車</button>
+  <button onclick="clearCart()">清空購物車</button>
+  <div id="cart"></div>
+  <div id="total"></div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

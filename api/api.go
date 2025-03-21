@@ -3,7 +3,7 @@ package api
 import (
 	"breakfast-shop/mysql"
 	//"database/sql"
-	//"fmt"
+	"fmt"
 	//"encoding/json"
 	"strconv"
 
@@ -84,7 +84,7 @@ func GetCart(c *gin.Context) {
 
 	// 🔹 查詢購物車內容
 	rows, err := mysql.DB.Query(`
-		SELECT product_id, product_name, quantity, price 
+		SELECT product_name, quantity, price 
 		FROM cart 
 		WHERE table_number = ?`, tableNumber)
 	if err != nil {
@@ -93,46 +93,41 @@ func GetCart(c *gin.Context) {
 	}
 	defer rows.Close()
 
-	var cart []map[string]interface{}
+	var cartDescriptions []string
 	var totalPrice int
 
 	// 🔹 迭代每一行的查詢結果
 	for rows.Next() {
-		var productID, price, quantity int
 		var productName string
-		err := rows.Scan(&productID, &productName, &quantity, &price)
+		var quantity, price int
+		err := rows.Scan(&productName, &quantity, &price)
 		if err != nil {
 			c.JSON(500, gin.H{"error": "Error reading cart data"})
 			return
 		}
 
 		// 計算總價
-		totalPrice += price * quantity
+		itemTotal := price * quantity
+		totalPrice += itemTotal
 
-		// 加入購物車結果陣列
-		cart = append(cart, gin.H{
-			"product_id":   productID,
-			"product_name": productName,
-			"quantity":     quantity,
-			"price":        price,
-			"total":        price * quantity, // 單項商品的總價格
-		})
+		description := fmt.Sprintf("%s 數量%d 總計為%d元", productName, quantity, itemTotal)
+		cartDescriptions = append(cartDescriptions, description)
 	}
 
-	// 🔹 返回 JSON 給前端
+	// 回傳結果
 	c.JSON(200, gin.H{
-		"cart":        cart,
+		"cart":        cartDescriptions,
 		"total_price": totalPrice,
 	})
 }
 
-// 刪除購物車內容
 func RemoveFromCart(c *gin.Context) {
 	tableNumber := c.Query("table_number")
 	productID := c.Query("product_id")
+	quantityStr := c.Query("quantity") // 取得要刪除的數量
 
-	if tableNumber == "" || productID == "" {
-		c.JSON(400, gin.H{"error": "Missing table_number or product_id"})
+	if tableNumber == "" || productID == "" || quantityStr == "" {
+		c.JSON(400, gin.H{"error": "Missing table_number, product_id, or quantity"})
 		return
 	}
 
@@ -142,19 +137,37 @@ func RemoveFromCart(c *gin.Context) {
 		return
 	}
 
-	result, err := mysql.DB.Exec(`DELETE FROM cart WHERE table_number = ? AND product_id = ?`, tableNumber, productIDInt)
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+	quantityToRemove, err := strconv.Atoi(quantityStr)
+	if err != nil || quantityToRemove <= 0 {
+		c.JSON(400, gin.H{"error": "Invalid quantity"})
 		return
 	}
 
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
+	// 查詢該商品目前數量
+	var currentQuantity int
+	err = mysql.DB.QueryRow(`SELECT quantity FROM cart WHERE table_number = ? AND product_id = ?`, tableNumber, productIDInt).Scan(&currentQuantity)
+	if err != nil {
 		c.JSON(404, gin.H{"error": "Product not found in cart"})
 		return
 	}
 
-	c.JSON(200, gin.H{"message": "Product removed from cart"})
+	if currentQuantity <= quantityToRemove {
+		// 如果刪除數量大於等於目前數量，刪除整個商品
+		_, err = mysql.DB.Exec(`DELETE FROM cart WHERE table_number = ? AND product_id = ?`, tableNumber, productIDInt)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(200, gin.H{"message": "Product removed from cart"})
+	} else {
+		// 只減少數量
+		_, err = mysql.DB.Exec(`UPDATE cart SET quantity = quantity - ? WHERE table_number = ? AND product_id = ?`, quantityToRemove, tableNumber, productIDInt)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(200, gin.H{"message": "Product quantity updated"})
+	}
 }
 
 // 清除整個購物車
