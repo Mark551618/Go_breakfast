@@ -74,7 +74,7 @@ button.minus:hover {
 #cart {
     margin-top: 20px;
     padding: 10px;
-    background: white;
+    background: rgb(23, 141, 44);
     border-radius: 8px;
     width: 60%;
     margin-left: auto;

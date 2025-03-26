@@ -25,6 +25,8 @@ func main() {
 	}
 
 	router := gin.Default()
+	//CORS（Cross-Origin Resource Sharing）是瀏覽器的安全機制，預設情況下，前端不能從不同的網域 / 來源去存取後端 API。
+	//這裡設定Default的話，我的API對所有的前端都開放，避免出現cors問題訊息
 	router.Use(cors.Default())
 
 	// 設定首頁（當用戶訪問 "/" 時，回傳 index.html）
@@ -39,6 +41,8 @@ func main() {
 	router.DELETE("/clear-cart", ClearCart)
 	router.DELETE("/remove-from-cart", RemoveFromCart)
 	router.PUT("/update-cart", UpdateCart)
+	router.POST("/add-batch-to-cart", AddBatchToCart)
+	router.POST("/submit-order", SubmitOrder)
 
 	router.Run(":8080")
 }
@@ -99,7 +103,7 @@ func GetCart(c *gin.Context) {
 	defer rows.Close()
 
 	var cart []string
-	var totalPrice int
+	var TotalPrice int
 
 	for rows.Next() {
 		var productName string
@@ -110,14 +114,14 @@ func GetCart(c *gin.Context) {
 			return
 		}
 
-		totalPrice += total // 🔥 直接加總 total_price
+		TotalPrice += total // 🔥 直接加總 total_price
 
 		cart = append(cart, fmt.Sprintf("%s 數量%d 總計為%d元", productName, quantity, total))
 	}
 
 	c.JSON(200, gin.H{
 		"cart":        cart,
-		"total_price": totalPrice,
+		"total_price": TotalPrice,
 	})
 }
 
@@ -191,4 +195,103 @@ func UpdateCart(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"message": "購物車數量已更新"})
+}
+
+// =========================================
+type OrderRequest struct {
+	TableNumber string `json:"table_number"`
+	TotalPrice  int    `json:"total_price"`
+}
+
+func SubmitOrder(c *gin.Context) {
+	var req OrderRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "格式錯誤"})
+		return
+	}
+
+	// 1. 建立訂單主表
+	result, err := DB.Exec(`
+		INSERT INTO orders (table_number, total_price,created_at)
+		VALUES (?, ?,NOW())`, req.TableNumber, req.TotalPrice)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "無法建立訂單"})
+		return
+	}
+
+	orderID, _ := result.LastInsertId()
+
+	// 2. 查詢該桌購物車商品
+	rows, err := DB.Query(`
+		SELECT product_id, product_name, quantity, total_price 
+		FROM cart WHERE table_number = ?`, req.TableNumber)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "讀取購物車失敗"})
+		return
+	}
+	defer rows.Close()
+
+	// 3. 寫入訂單細項
+	for rows.Next() {
+		var pid, qty, itemTotal int
+		var name string
+		rows.Scan(&pid, &name, &qty, &itemTotal)
+
+		_, err = DB.Exec(`
+			INSERT INTO order_items (order_id, product_id, product_name, quantity, total_price)
+			VALUES (?, ?, ?, ?, ?)`, orderID, pid, name, qty, itemTotal)
+		if err != nil {
+			log.Println("寫入訂單細項失敗：", err)
+			continue
+		}
+	}
+
+	// 4. 清空該桌購物車
+	_, err = DB.Exec(`DELETE FROM cart WHERE table_number = ?`, req.TableNumber)
+	if err != nil {
+		log.Println("清空購物車失敗：", err)
+		c.JSON(500, gin.H{"error": "清空購物車失敗"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "訂單已送出", "order_id": orderID})
+}
+
+// ====================後端 Golang 實作 /add-batch-to-cart=================================
+type CartItem struct {
+	ProductID int `json:"product_id"`
+	Quantity  int `json:"quantity"`
+}
+
+type BatchCartRequest struct {
+	TableNumber string     `json:"table_number"`
+	Items       []CartItem `json:"items"`
+}
+
+func AddBatchToCart(c *gin.Context) {
+	var req BatchCartRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "格式錯誤"})
+		return
+	}
+
+	for _, item := range req.Items {
+		_, err := DB.Exec(`
+			INSERT INTO cart (product_id, product_name, quantity, total_price, table_number)
+			SELECT ?, product_name, ?, price * ?, ?
+			FROM products
+			WHERE product_id = ?
+			ON DUPLICATE KEY UPDATE 
+				quantity = quantity + VALUES(quantity),
+				total_price = total_price + VALUES(total_price)`,
+			item.ProductID, item.Quantity, item.Quantity, req.TableNumber, item.ProductID)
+
+		if err != nil {
+			log.Println("批次加入購物車錯誤:", err)
+			c.JSON(500, gin.H{"error": "資料庫寫入失敗"})
+			return
+		}
+	}
+
+	c.JSON(200, gin.H{"message": "商品已加入購物車"})
 }

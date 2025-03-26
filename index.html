@@ -1,18 +1,163 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>早餐店點餐系統</title>
-  <link rel="stylesheet" href="/static/styles.css">  <!-- 加入 CSS 檔案 -->
+  <style>
+        /* 🔹 整體樣式 */
+    body {
+      background-image: url("/static/background1.jpg"); /* 使用根目錄方式存取 */
+      background-size: cover; /* 讓背景填滿整個畫面 */
+      background-position: center; /* 讓圖片保持在畫面中央 */
+      background-repeat: no-repeat; /* 避免圖片重複 */
+      text-align: center;
+      height: 100vh; /* 讓背景至少滿版 */
+      font-family: Arial, sans-serif; /* 設定字體 */
+    }
+
+    .whitebackground{
+      display: flex;               /* ✅ 改成 flex 來置中內容 */
+      align-items: center;         /* 垂直置中 */
+      justify-content: center;     /* 水平置中 */
+      width: 250px;
+      height: 50px;
+      margin: 40px auto 40px; /*上方 右方 下方 左方*/
+      border-radius: 8px;
+      font-size: 28px;
+      font-weight: bolder;
+      background-color: white;
+        
+    }
+    .btn {
+      background-color: #F72C5B;
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      padding: 10px 20px;
+      margin: 8px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      transition: background-color 0.2s ease, transform 0.1s ease;
+    }
+
+    .btn:hover {
+      background-color: #FF748B;
+      transform: scale(1.05);
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    /* 🔹 分類按鈕（漢堡、蛋餅、飲料）可以用不同色 */
+    .btn-category {
+      background-color: #F72C5B;
+    }
+
+    .btn-category:hover {
+      background-color: #FF748B;
+    }
+
+    /* 🔸 特殊功能色（查看、清空、送出）也可以區分 */
+    .btn-clear {
+      background-color: #E4F1AC;
+      color:black;
+    }
+
+    .btn-clear:hover {
+      background-color: #9faf58;
+      color:black;
+    }
+
+    .btn-confirm {
+      background-color: #A7D477;
+      color:black;
+    }
+
+    .btn-confirm:hover {
+      background-color: #65893f;
+      color:black;
+    }
+
+    /* 🔹 商品區域 */
+    .category {
+        margin-top: 20px;
+    }
+
+    /* 🔹 單個商品排版 */
+    .item {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: white;
+        padding: 10px;
+        margin: 5px auto;
+        width: 50%;
+        border-radius: 8px;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 🔹 商品名稱 */
+    .item span {
+        flex: 1;
+        font-size: 18px;
+    }
+
+    /* 🔹 `+` `-` 按鈕 */
+    button.plus, button.minus {
+        background-color: #FF748B;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        margin: 5px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    button.minus {
+        background-color: #FF748B;
+    }
+
+    button.plus:hover {
+        background-color: #91172b;
+    }
+
+    button.minus:hover {
+        background-color: #91172b;
+    }
+
+    /* 🔹 購物車區域 */
+    #cart {
+        margin-top: 20px;
+        padding: 10px;
+        background: white;
+        border-radius: 8px;
+        width: 60%;
+        margin-left: auto;
+        margin-right: auto;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    #total {
+        font-size: 20px;
+        font-weight: bold;
+        margin-top: 10px;
+        
+    }
+  
+  </style>
   
 </head>
 <body>
-  <h1>早餐店點餐系統</h1>
+  <h1 class="whitebackground">早餐店點餐系統</h1>
 
   <!-- 🔹 桌號選擇 -->
-  <label for="tableSelect">選擇桌號：</label>
-  <select id="tableSelect">
+  <label for="tableSelect" style="font-size: 28px; font-weight: bolder;">選擇桌號：</label>
+  <select id="tableSelect" class="btn">
     <option value="A">A桌</option>
     <option value="B">B桌</option>
     <option value="C">C桌</option>
@@ -21,87 +166,114 @@
     <option value="F">F桌</option>
   </select>
 
-  <h2>商品分類</h2>
-    <button onclick="showCategory('burger')">漢堡</button>
-    <button onclick="showCategory('pancake')">蛋餅</button>
-    <button onclick="showCategory('drink')">飲料</button>
+  <h2 class="whitebackground">商品分類</h2>
+    <button class="btn btn-category" onclick="showCategory('burger')">漢堡</button>
+    <button class="btn btn-category" onclick="showCategory('pancake')">蛋餅</button>
+    <button class="btn btn-category" onclick="showCategory('drink')">飲料</button>
 
   <!-- 🔹 商品類別，預設不顯示 -->
   <div id="burger" class="category" style="display: none;">
     <div class="item">
-      <span>豬排蛋漢堡</span>
-      <button onclick="updateQuantity(1, -1)">-</button>
+      <span>豬排蛋漢堡 45元</span>
+      <button class="plus" onclick="updateQuantity(1, 1)">+</button>
       <span id="qty-1">0</span>
-      <button onclick="updateQuantity(1, 1)">+</button>
+      <button class="minus" onclick="updateQuantity(1, -1)">-</button>
+      
     </div>
 
     <div class="item">
-      <span>雞排蛋漢堡</span>
-      <button onclick="updateQuantity(2, -1)">-</button>
+      <span>雞排蛋漢堡 60元</span>
+      <button class="plus" onclick="updateQuantity(2, 1)">+</button>
       <span id="qty-2">0</span>
-      <button onclick="updateQuantity(2, 1)">+</button>
+      <button class="minus" onclick="updateQuantity(2, -1)">-</button>
+      
     </div>
 
     <div class="item">
-      <span>酥炸魚排漢堡</span>
-      <button onclick="updateQuantity(3, -1)">-</button>
+      <span>酥炸魚排漢堡 50元</span>
+      <button class="plus" onclick="updateQuantity(3, 1)">+</button>
       <span id="qty-3">0</span>
-      <button onclick="updateQuantity(3, 1)">+</button>
+      <button class="minus" onclick="updateQuantity(3, -1)">-</button>
+      
     </div>
+
+
+    <div style="margin-top: 10px;">
+      <button class="btn" onclick="submitCart()">送出</button>
+    </div>
+
   </div>
 
   <div id="pancake" class="category" style="display: none;">
     <div class="item">
-      <span>起司蛋餅</span>
-      <button onclick="updateQuantity(4, -1)">-</button>
+      <span>起司蛋餅 40元</span>
+      <button class="plus" onclick="updateQuantity(4, 1)">+</button>
       <span id="qty-4">0</span>
-      <button onclick="updateQuantity(4, 1)">+</button>
+      <button class="minus" onclick="updateQuantity(4, -1)">-</button>
+      
     </div>
   
     <div class="item">
-      <span>九層塔蛋餅</span>
-      <button onclick="updateQuantity(5, -1)">-</button>
+      <span>九層塔蛋餅 35元</span>
+      <button class="plus" onclick="updateQuantity(5, 1)">+</button>
       <span id="qty-5">0</span>
-      <button onclick="updateQuantity(5, 1)">+</button>
+      <button class="minus" onclick="updateQuantity(5, -1)">-</button>
+      
     </div>
   
     <div class="item">
-      <span>培根蛋餅</span>
-      <button onclick="updateQuantity(6, -1)">-</button>
+      <span>培根蛋餅 40元</span>
+      <button class="plus" onclick="updateQuantity(6, 1)">+</button>
       <span id="qty-6">0</span>
-      <button onclick="updateQuantity(6, 1)">+</button>
+      <button class="minus" onclick="updateQuantity(6, -1)">-</button>
+      
     </div>
+
+    <div style="margin-top: 10px;">
+      <button class="btn" onclick="submitCart()">送出</button>
+    </div>
+
   </div>
 
   <div id="drink" class="category" style="display: none;">
     <div class="item">
-      <span>阿薩姆紅茶</span>
-      <button onclick="updateQuantity(7, -1)">-</button>
+      <span>阿薩姆紅茶 30元</span>
+      <button class="plus" onclick="updateQuantity(7, 1)">+</button>
       <span id="qty-7">0</span>
-      <button onclick="updateQuantity(7, 1)">+</button>
+      <button class="minus" onclick="updateQuantity(7, -1)">-</button>
+      
     </div>
   
     <div class="item">
-      <span>茉香綠茶</span>
-      <button onclick="updateQuantity(8, -1)">-</button>
+      <span>茉香綠茶 30元</span>
+      <button class="plus" onclick="updateQuantity(8, 1)">+</button>
       <span id="qty-8">0</span>
-      <button onclick="updateQuantity(8, 1)">+</button>
+      <button class="minus" onclick="updateQuantity(8, -1)">-</button>
+      
     </div>
 
     <div class="item">
-      <span>高山青茶</span>
-      <button onclick="updateQuantity(9, -1)">-</button>
+      <span>高山青茶 30元</span>
+      <button class="plus" onclick="updateQuantity(9, 1)">+</button>
       <span id="qty-9">0</span>
-      <button onclick="updateQuantity(9, 1)">+</button>
+      <button class="minus" onclick="updateQuantity(9, -1)">-</button>
+      
     </div>
+
+    <div style="margin-top: 10px;">
+      <button class="btn" onclick="submitCart()">送出</button>
+    </div>
+
   </div>
 
 
 
 
-  <h2>購物車內容</h2>
-  <button onclick="loadCart()">查看購物車</button>
-  <button onclick="clearCart()">清空購物車</button>
+  <h2 class="whitebackground">購物車內容</h2>
+  <button class="btn btn-confirm" onclick="loadCart()">查看購物車</button>
+  <button class="btn btn-clear" onclick="clearCart()">清空購物車</button>
+  <button class="btn btn-confirm" onclick="submitOrder()">確認後送出訂單</button>
+
   <div id="cart"></div>
   <div id="total"></div>
 
