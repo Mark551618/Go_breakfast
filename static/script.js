@@ -125,8 +125,7 @@ async function submitOrder() {
   }
 
   const orderData = {
-    table_number: tableNumber,
-    total_price: data.total_price,
+    table_number: tableNumber
   };
 
   const submitRes = await fetch("http://localhost:8080/submit-order", {
@@ -136,21 +135,22 @@ async function submitOrder() {
   });
 
   const result = await submitRes.json();
-  alert(result.message || "訂單送出完成");
 
-  //清空購物車畫面
+  //  顯示訂單號碼與總金額
+  alert(`訂單送出成功！\n訂單編號：${result.order_id}\n總金額：${result.amount_of_money} 元`);
+
+  //  清空畫面
   document.getElementById('cart').innerHTML = '';
   document.getElementById('total').textContent = '';
-
-  //重設所有商品數量顯示為 0
   for (let i = 1; i <= 9; i++) {
     const qtySpan = document.getElementById(`qty-${i}`);
     if (qtySpan) qtySpan.textContent = 0;
   }
 
-  //也重設 JS 內部 cart 資料（如果你有使用）
+  //  清空 JS 內部暫存
   if (typeof cart === 'object') {
     cart = {};
   }
 }
+
 

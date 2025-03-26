@@ -199,21 +199,35 @@ func UpdateCart(c *gin.Context) {
 
 // =========================================
 type OrderRequest struct {
-	TableNumber string `json:"table_number"`
-	TotalPrice  int    `json:"total_price"`
+	TableNumber   string `json:"table_number"`
+	AmountOfMoney int    `json:"amount_of_money"`
 }
 
 func SubmitOrder(c *gin.Context) {
-	var req OrderRequest
+	var req struct {
+		TableNumber string `json:"table_number"`
+	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(400, gin.H{"error": "格式錯誤"})
 		return
 	}
 
+	// 🔥 自動統計該桌總金額
+	var amountOfMoney int
+	err := DB.QueryRow(`
+		SELECT SUM(total_price) FROM cart WHERE table_number = ?
+	`, req.TableNumber).Scan(&amountOfMoney)
+	if err != nil {
+		log.Println("計算總金額失敗:", err)
+		c.JSON(500, gin.H{"error": "計算總金額失敗"})
+		return
+	}
+
 	// 1. 建立訂單主表
 	result, err := DB.Exec(`
-		INSERT INTO orders (table_number, total_price,created_at)
-		VALUES (?, ?,NOW())`, req.TableNumber, req.TotalPrice)
+		INSERT INTO orders (table_number, amount_of_money, created_at)
+		VALUES (?, ?, NOW())
+	`, req.TableNumber, amountOfMoney)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "無法建立訂單"})
 		return
@@ -221,17 +235,18 @@ func SubmitOrder(c *gin.Context) {
 
 	orderID, _ := result.LastInsertId()
 
-	// 2. 查詢該桌購物車商品
+	// 2. 查詢購物車明細
 	rows, err := DB.Query(`
 		SELECT product_id, product_name, quantity, total_price 
-		FROM cart WHERE table_number = ?`, req.TableNumber)
+		FROM cart WHERE table_number = ?
+	`, req.TableNumber)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "讀取購物車失敗"})
 		return
 	}
 	defer rows.Close()
 
-	// 3. 寫入訂單細項
+	// 3. 寫入訂單明細
 	for rows.Next() {
 		var pid, qty, itemTotal int
 		var name string
@@ -239,14 +254,15 @@ func SubmitOrder(c *gin.Context) {
 
 		_, err = DB.Exec(`
 			INSERT INTO order_items (order_id, product_id, product_name, quantity, total_price)
-			VALUES (?, ?, ?, ?, ?)`, orderID, pid, name, qty, itemTotal)
+			VALUES (?, ?, ?, ?, ?)
+		`, orderID, pid, name, qty, itemTotal)
 		if err != nil {
 			log.Println("寫入訂單細項失敗：", err)
 			continue
 		}
 	}
 
-	// 4. 清空該桌購物車
+	// 4. 清空購物車
 	_, err = DB.Exec(`DELETE FROM cart WHERE table_number = ?`, req.TableNumber)
 	if err != nil {
 		log.Println("清空購物車失敗：", err)
@@ -254,7 +270,11 @@ func SubmitOrder(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{"message": "訂單已送出", "order_id": orderID})
+	c.JSON(200, gin.H{
+		"message":         "訂單已送出",
+		"order_id":        orderID,
+		"amount_of_money": amountOfMoney,
+	})
 }
 
 // ====================後端 Golang 實作 /add-batch-to-cart=================================
